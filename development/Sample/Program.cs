@@ -12,7 +12,7 @@ namespace Sample
 			{
 				// We need to ensure that the user has attached his rift to the computer
 				// or wait until he has done so.
-				var hmd = mgr.AttachedDevice;
+				IHMD hmd = mgr.AttachedDevice;
 				if (hmd == null)
 				{
 					Console.WriteLine("Please attach your rift to the computer...");
@@ -24,7 +24,10 @@ namespace Sample
                 
                 while (true)
                 {
-                    Console.WriteLine("Acceleration " + hmd.Acceleration.X + "," + hmd.Acceleration.Y + "," + hmd.Acceleration.Z);
+                    var sensorState = hmd.GetSensorState(0.0);
+                    Console.WriteLine("Acceleration " + sensorState.Recorded.LinearAcceleration.X + ","
+                        + sensorState.Recorded.LinearAcceleration.Y + ","
+                        + sensorState.Recorded.LinearAcceleration.Z);
                     Thread.Sleep(100);
                 }
 

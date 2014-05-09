@@ -24,21 +24,10 @@ namespace RiftDotNet
 		/// </summary>
 		DeviceType Type { get; }
 
-		/// <summary>
-		/// Obtains a reference to the parent of this device.
-		/// Every time this reference is obtained, it must be released as well.
-		/// </summary>
-		IDevice Parent { get; }
-
-		/// <summary>
-		/// The message handler installed on this device.
-		/// </summary>
-		MessageHandler MessageHandler { get; set; }
-
-		/// <summary>
-		/// Information about this device.
-		/// </summary>
-		IDeviceInfo Info { get; }
+        ///// <summary>
+        ///// Information about this device.
+        ///// </summary>
+        //IDeviceInfo Info { get; }
 
 		/// <summary>
 		/// Whether or not this object has already been disposed of.
@@ -48,15 +37,5 @@ namespace RiftDotNet
 		/// IsDisposed will throw an ObjectDisposedException, when invoked.
 		/// </remarks>
 		bool IsDisposed { get; }
-
-		/// <summary>
-		/// The reference count of the underlying native resource.
-		/// </summary>
-		/// <remarks>
-		/// Returns 0 when this instance has been disposed of.
-		/// However this does not mean that all instances to the same device
-		/// have been disposed of.
-		/// </remarks>
-		UInt32 RefCount { get; }
 	}
 }

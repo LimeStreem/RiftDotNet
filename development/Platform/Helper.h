@@ -1,7 +1,5 @@
 ﻿#pragma once
 
-#include <OVR_Device.h>
-
 #include "RiftDotNet.h"
 
 using namespace System;
@@ -17,98 +15,103 @@ namespace RiftDotNet
 		ref class Helper
 		{
 		public:
-
-			static RiftDotNet::CoordinateFrame FromNative(OVR::SensorDevice::CoordinateFrame frame)
+			static SharpDX::Vector3 FromNative(const ovrVector3f& other)
 			{
-				switch(frame)
-				{
-				case OVR::SensorDevice::Coord_Sensor:
-					return RiftDotNet::CoordinateFrame::Sensor;
-
-				case OVR::SensorDevice::Coord_HMD:
-					return RiftDotNet::CoordinateFrame::HMD;
-
-				default:
-					throw gcnew InvalidEnumArgumentException("frame", (int)frame, OVR::SensorDevice::CoordinateFrame::typeid);
-				}
+				SharpDX::Vector3 v;
+				v.X = other.x;
+				v.Y = other.y;
+				v.Z = other.z;
+				return v;
 			}
 
-			static OVR::SensorDevice::CoordinateFrame ToNative(RiftDotNet::CoordinateFrame frame)
+			static SharpDX::Vector2 FromNative(const ovrVector2f& other)
 			{
-				
-				switch(frame)
-				{
-				case OVR::SensorDevice::Coord_Sensor:
-					return OVR::SensorDevice::Coord_Sensor;
-
-				case OVR::SensorDevice::Coord_HMD:
-					return OVR::SensorDevice::Coord_HMD;
-
-				default:
-					throw gcnew InvalidEnumArgumentException("frame", (int)frame, OVR::SensorDevice::CoordinateFrame::typeid);
-				}
+				SharpDX::Vector2 v;
+				v.X = other.x;
+				v.Y = other.y;
+				return v;
 			}
 
-			static SharpDX::Color FromNative(OVR::Color color)
+			static SharpDX::Viewport FromNative(const ovrRecti& other)
 			{
-				return SharpDX::Color(color.R, color.G, color.B, color.A);
+				return SharpDX::Viewport(other.Pos.x, other.Pos.y,
+					other.Size.w, other.Size.h);
 			}
 
-			static MessageType FromNative(OVR::MessageType type)
+			static SharpDX::Quaternion FromNative(const ovrQuatf& other)
 			{
-				switch(type)
-				{
-				case OVR::Message_None:
-					return MessageType::None;
-
-				case OVR::Message_BodyFrame:
-					return MessageType::BodyFrame;
-
-				case OVR::Message_DeviceAdded:
-					return MessageType::DeviceAdded;
-
-				case OVR::Message_DeviceRemoved:
-					return MessageType::DeviceRemoved;
-
-				case OVR::Message_LatencyTestColorDetected:
-					return MessageType::LatencyTestColorDetected;
-
-				case OVR::Message_LatencyTestSamples:
-					return MessageType::LatencyTestSamples;
-
-				case OVR::Message_LatencyTestStarted:
-					break;
-
-				case OVR::Message_LatencyTestButton:
-					return MessageType::LatencyTestButton;
-
-				default:
-					throw gcnew ArgumentException(String::Format("Unknown message type: {0}", (int)type));
-				}
-
-				// Why does the compiler not detect the exception?!
-				// As if the default label above will magically be jumped over
-				// when executing this code
-				// (╯°□°）╯︵ ┻━┻
-				return MessageType::None;
+				SharpDX::Quaternion quat;
+				quat.X = other.x;
+				quat.Y = other.y;
+				quat.Z = other.z;
+				quat.W = other.w;
+				return quat;
 			}
 
-			static OVR::SensorRange ToNative(SensorRange range)
+			static SharpDX::Matrix FromNative(ovrMatrix4f matrix)
 			{
-				OVR::SensorRange ret;
-				ret.MaxAcceleration = range.MaxAcceleration;
-				ret.MaxRotationRate = range.MaxRotationRate;
-				ret.MaxMagneticField = range.MaxMagneticField;
-				return ret;
+				return SharpDX::Matrix(matrix.M[0][0],matrix.M[0][1], matrix.M[0][2], matrix.M[0][3],
+									   matrix.M[1][0],matrix.M[1][1], matrix.M[1][2], matrix.M[1][3],
+									   matrix.M[2][0],matrix.M[2][1], matrix.M[2][2], matrix.M[2][3],
+									   matrix.M[3][0],matrix.M[3][1], matrix.M[3][2], matrix.M[3][3]);
 			}
 
-			static SensorRange FromNative(OVR::SensorRange range)
+			static ovrEyeDesc ToNative(IEyeDesc^ eye)
 			{
-				SensorRange ret;
-				ret.MaxAcceleration = range.MaxAcceleration;
-				ret.MaxRotationRate = range.MaxRotationRate;
-				ret.MaxMagneticField = range.MaxMagneticField;
-				return ret;
+				ovrEyeDesc eyeDesc;
+				eyeDesc.Fov.DownTan = eye->Fov->DownTan;
+				eyeDesc.Fov.LeftTan = eye->Fov->LeftTan;
+				eyeDesc.Fov.RightTan = eye->Fov->RightTan;
+				eyeDesc.Fov.UpTan = eye->Fov->UpTan;
+				eyeDesc.RenderViewport.Pos.x = eye->RenderViewport.X;
+				eyeDesc.RenderViewport.Pos.y = eye->RenderViewport.Y;
+				eyeDesc.RenderViewport.Size.h = eye->RenderViewport.Height;
+				eyeDesc.RenderViewport.Size.w = eye->RenderViewport.Width;
+				eyeDesc.TextureSize.h = eye->TextureSize->Height;
+				eyeDesc.TextureSize.w = eye->TextureSize->Width;
+				eyeDesc.Eye = (ovrEyeType) eye->Eye;
+				return eyeDesc;
+			}
+
+			static ovrPosef ToNative(IPosef^ pose)
+			{
+				ovrPosef nPose;
+				nPose.Orientation.w = pose->Orientation.W;
+				nPose.Orientation.x = pose->Orientation.X;
+				nPose.Orientation.y = pose->Orientation.Y;
+				nPose.Orientation.z = pose->Orientation.Z;
+				nPose.Position.x = pose->Position.X;
+				nPose.Position.y = pose->Position.Y;
+				nPose.Position.z = pose->Position.Z;
+				return nPose;
+			}
+
+			static ovrFovPort ToNative(IFovPort^ fov)
+			{
+				ovrFovPort fovPort;
+				fovPort.DownTan = fov->DownTan;
+				fovPort.LeftTan = fov->LeftTan;
+				fovPort.RightTan = fov->RightTan;
+				fovPort.UpTan = fov->UpTan;
+				return fovPort;
+			}
+
+			static ovrSizei ToNative(ITextureSize^ textSize)
+			{
+				ovrSizei size;
+				size.h = textSize->Height;
+				size.w = textSize->Width;
+				return size;
+			}
+
+			static ovrRecti ToNative(SharpDX::Viewport view)
+			{
+				ovrRecti vp;
+				vp.Pos.x = view.X;
+				vp.Pos.y = view.Y;
+				vp.Size.h = view.Height;
+				vp.Size.w = view.Width;
+				return vp;
 			}
 		};
 	}

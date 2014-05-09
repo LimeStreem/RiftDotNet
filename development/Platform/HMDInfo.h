@@ -1,9 +1,10 @@
 #pragma once
 
-#include <OVR_Device.h>
+#include <OVR_CAPI.h>
 
 #include "RiftDotNet.h"
 #include "DeviceInfo.h"
+#include "FovPort.h"
 
 
 namespace RiftDotNet
@@ -15,69 +16,64 @@ namespace RiftDotNet
 			, public IHMDInfo
 		{
 		public:
-
 			property unsigned int HResolution { virtual unsigned int get() { return _hResolution; } }
 			property unsigned int VResolution  { virtual unsigned int get() { return _vResolution; } }
-			property float     HScreenSize { virtual float get() { return _hScreenSize; } }
-			property float VScreenSize { virtual float get() { return _vScreenSize; } }
-			property float     VScreenCenter { virtual float get() { return _vScreenCenter; } }
-			property float     EyeToScreenDistance { virtual float get() { return _vScreenCenter; } }
-			property float     LensSeparationDistance { virtual float get() { return _vScreenCenter; } }
-			property float     InterpupillaryDistance { virtual float get() { return _interpupillaryDistance; } }
-			property array<float>^ DistortionK { virtual  array<float>^ get() { return _distortionK; } }
 			property int       DesktopX { virtual int get() { return _desktopX; } }
 			property int DesktopY { virtual int get() { return _desktopY; } }
 			property Object^ DisplayDevice { virtual Object^ get() { return _displayDevice; } }
+			property unsigned int  Caps { virtual unsigned int get() { return _caps; } }
+			property unsigned int  DistortionCaps { virtual unsigned int get() { return _dCaps; } }
+			property array<IFovPort^>^ DefaultEyeFov { virtual array<IFovPort^>^ get() { return _defaultEyeFov; }}
+			property array<IFovPort^>^ MaxEyeFov { virtual array<IFovPort^>^ get() { return _maxFov; }}
+			property array<EyeType>^ EyeRenderOrder { virtual array<EyeType>^ get() { return _eyeRenderOrder; }}
+
 
 			HMDInfo()
 				: DeviceInfo(DeviceType::HMD)
 				, _hResolution(0)
 				, _vResolution(0)
-				, _hScreenSize(0)
-				, _vScreenSize(0)
-				, _vScreenCenter(0)
-				, _eyeToScreenDistance(0)
-				, _lensSeparationDistance(0)
-				, _interpupillaryDistance(0)
 				, _desktopX(0)
 				, _desktopY(0)
 				, _displayDevice(nullptr)
+				, _caps(0)
+				, _dCaps(0)
 			{
-				_distortionK = gcnew array<float>(4);
+				_defaultEyeFov = gcnew array<IFovPort^>(2);
+				_maxFov = gcnew array<IFovPort^>(2);
+				_eyeRenderOrder = gcnew array<EyeType>(2);
 			}
 
-			HMDInfo(const OVR::HMDInfo& native)
+			HMDInfo(const ovrHmdDesc& native)
 				: DeviceInfo(native)
-				, _hResolution(native.HResolution)
-				, _vResolution(native.VResolution)
-				, _hScreenSize(native.HScreenSize)
-				, _vScreenSize(native.VScreenSize)
-				, _vScreenCenter(native.VScreenCenter)
-				, _eyeToScreenDistance(native.EyeToScreenDistance)
-				, _lensSeparationDistance(native.LensSeparationDistance)
-				,_interpupillaryDistance(native.InterpupillaryDistance)
-				, _distortionK(gcnew array<float>(4))
-				, _desktopX(native.DesktopX)
-				, _desktopY(native.DesktopY)
-				, _displayDevice(gcnew String(native.DisplayDeviceName)) //< TODO: MacOS...
+				, _hResolution(native.Resolution.w)
+				, _vResolution(native.Resolution.h)
+				, _desktopX(native.WindowsPos.x)
+				, _desktopY(native.WindowsPos.y)
+				, _displayDevice(gcnew String(native.DisplayDeviceName))//< TODO: MacOS...
+				, _caps(native.Caps)
+				, _dCaps(native.DistortionCaps)
 			{
-				DistortionK[0] = native.DistortionK[0];
-				DistortionK[1] = native.DistortionK[1];
-				DistortionK[2] = native.DistortionK[2];
-				DistortionK[3] = native.DistortionK[3];
+				_defaultEyeFov = gcnew array<IFovPort^>(2);
+				_maxFov = gcnew array<IFovPort^>(2);
+				_eyeRenderOrder = gcnew array<EyeType>(2);
+
+				for (size_t i = 0; i < 2; i++)
+				{
+					_defaultEyeFov[i] = gcnew FovPort(native.DefaultEyeFov[i]);
+					_maxFov[i] = gcnew FovPort(native.MaxEyeFov[i]);
+					_eyeRenderOrder[i] = (EyeType)native.EyeRenderOrder[i];
+				}
 			}
 
 		private:
-
 			const unsigned int _hResolution, _vResolution;
-			const float     _hScreenSize, _vScreenSize;
-			const float     _vScreenCenter;
-			const float     _eyeToScreenDistance;
-			const float     _lensSeparationDistance;
-			const float     _interpupillaryDistance;
-			array<float>^ _distortionK;
 			const int       _desktopX, _desktopY;
 			Object^ _displayDevice;
+			unsigned int _caps;
+			unsigned int _dCaps;
+			array<IFovPort^>^ _defaultEyeFov;
+			array<IFovPort^>^ _maxFov;
+			array<EyeType>^ _eyeRenderOrder;
 		};
 	}
 }

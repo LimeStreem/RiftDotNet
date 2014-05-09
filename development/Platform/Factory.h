@@ -2,13 +2,9 @@
 
 #include "RiftDotNet.h"
 #include "DeviceManager.h"
-#include "SensorFusion.h"
 #include "HMDInfo.h"
-#include "SensorInfo.h"
 #include "UnitTestDetector.h"
-
-
-
+#include "SensorState.h"
 
 namespace RiftDotNet
 {
@@ -29,19 +25,14 @@ namespace RiftDotNet
 				return gcnew HMDInfo();
 			}
 
-			virtual ISensorInfo^ CreateSensorInfo()
+			virtual ISensorState^ CreateSensorState()
 			{
-				return gcnew SensorInfo();
+				return gcnew SensorSate(ovrSensorState());
 			}
 
 			virtual IDeviceManager^ CreateDeviceManager()
 			{
-				return DeviceManager::Create();
-			}
-
-			virtual ISensorFusion^ CreateSensorFusion(ISensorDevice^ device)
-			{
-				return gcnew SensorFusion(device);
+				return gcnew DeviceManager();
 			}
 
 			static property Factory^ Instance { Factory^ get() { return _theOne; } }
@@ -53,13 +44,13 @@ namespace RiftDotNet
 				// Well, if it aint gonna behave, then nobody is getting logging...
 				if (UnitTestDetector::IsRunningFromNunit)
 				{
-					OVR::System::Init();
+					ovr_Initialize();
 				}
 				else
 				{
 					// Yeah, who's gonna delete that?
 					auto log = new Log4Net();
-					OVR::System::Init();
+					ovr_Initialize();
 				}
 
 				_theOne = gcnew Factory();

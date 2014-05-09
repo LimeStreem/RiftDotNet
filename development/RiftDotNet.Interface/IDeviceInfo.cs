@@ -32,10 +32,5 @@ namespace RiftDotNet
 		/// Name string describing the manufacturer of the product.
 		/// </summary>
 		string Manufacturer { get; }
-
-		/// <summary>
-		/// Version number of the physical or virtual device.
-		/// </summary>
-		uint Version { get; }
 	}
 }

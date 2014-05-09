@@ -14,8 +14,7 @@ namespace RiftDotNet
 	namespace Platform
 	{
 		public ref class SensorInfo sealed
-			: public DeviceInfo
-			, public ISensorInfo
+			: public ISensorInfo
 		{
 		public:
 
@@ -30,17 +29,8 @@ namespace RiftDotNet
 			String^ _serialNumber;
 
 		public:
-
-			SensorInfo()
-				: DeviceInfo(DeviceType::Sensor)
-				, _vendorId(0)
-				, _productId(0)
-				, _serialNumber(nullptr)
-			{}
-
-			SensorInfo(const OVR::SensorInfo& native)
-				: DeviceInfo(native)
-				, _vendorId(native.VendorId)
+			SensorInfo(const ovrSensorDesc& native)
+				:  _vendorId(native.VendorId)
 				, _productId(native.ProductId)
 				, _serialNumber(gcnew String(native.SerialNumber))
 			{}

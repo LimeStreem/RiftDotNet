@@ -7,18 +7,14 @@ namespace RiftDotNet
 	/// </summary>
 	public struct DeviceKey : IEquatable<DeviceKey>
 	{
-		private readonly DeviceType _deviceType;
-		private readonly string _manufacturer;
-		private readonly string _productName;
-		private readonly uint _version;
+        private readonly UInt16 _vendorId;
+        private readonly UInt16 _productId;
 		private readonly string _serialNumber;
 
 		public DeviceKey(ISensorInfo deviceInfo)
 		{
-			_deviceType = deviceInfo.Type;
-			_productName = deviceInfo.ProductName;
-			_manufacturer = deviceInfo.Manufacturer;
-			_version = deviceInfo.Version;
+			_productId = deviceInfo.ProductId;
+			_vendorId = deviceInfo.VendorId;
 			_serialNumber = deviceInfo.SerialNumber;
 		}
 
@@ -26,11 +22,9 @@ namespace RiftDotNet
 
 		public bool Equals(DeviceKey other)
 		{
-			return _deviceType == other._deviceType &&
-			       string.Equals(_productName, other._productName) &&
-			       string.Equals(_manufacturer, other._manufacturer) &&
-			       string.Equals(_serialNumber, other._serialNumber) &&
-			       _version == other._version;
+            return _vendorId == other._vendorId &&
+                   string.Equals(_productId, other._productId) &&
+                   string.Equals(_serialNumber, other._serialNumber);
 		}
 
 		#endregion
@@ -45,10 +39,8 @@ namespace RiftDotNet
 		{
 			unchecked
 			{
-				var hashCode = (int)_deviceType;
-				hashCode = (hashCode * 397) ^ (_productName != null ? _productName.GetHashCode() : 0);
-				hashCode = (hashCode * 397) ^ (_manufacturer != null ? _manufacturer.GetHashCode() : 0);
-				hashCode = (hashCode * 397) ^ (int)_version;
+				var hashCode = (int)_vendorId;
+                hashCode = (hashCode * 397) ^ (_productId.GetHashCode());
 				hashCode = (hashCode * 397) ^ (_serialNumber != null ? _serialNumber.GetHashCode() : 0);
 				return hashCode;
 			}

@@ -1,132 +1,96 @@
 #pragma once
 
-#include <OVR_Device.h>
-#include <OVR_DeviceImpl.h>
-#include <OVR_Profile.h>
+#include <OVR_CAPI.h>
 
 #include "RiftDotNet.h"
 #include "System.h"
-#include "DeviceBase.h"
-#include "DeviceHandle.h"
-#include "DeviceEnumerable.h"
 #include "HMDDevice.h"
-#include "SensorDevice.h"
-#include "ValueWrapper.h"
-#include "Profile.h"
 
 using namespace System::Collections::Generic;
-
-
 
 namespace RiftDotNet
 {
 	namespace Platform
 	{
 		public ref class DeviceManager
-			: public DeviceBase
-			, public IDeviceManager
+			:  public IDeviceManager
 		{
 		private:
+			IntPtr _equalityHandle;
 
 		public:
-
-			static DeviceManager^ Create()
+			DeviceManager() 
 			{
-				auto native = OVR::DeviceManager::Create();
-				return gcnew DeviceManager(native);
 			}
-
-			DeviceManager(OVR::DeviceManager* native)
-				: DeviceBase(native)
-			{}
 
 			~DeviceManager()
 			{
-				
+				// free all allocated memory from OVR SDK
+				ovr_Shutdown();
 			}
 
-			property RiftDotNet::IProfile^ DeviceDefaultProfile
+			property  DisposableArray<IHMDDevice^>^ HMDDevices
 			{
-				virtual RiftDotNet::IProfile^ get()
-				{
-					RiftDotNet::IProfile^ ret;
-
-					if (IsDisposed)
-						throw gcnew ObjectDisposedException("IHMDDevice");									
-
-					auto manager=GetNative<OVR::DeviceManager>()->GetProfileManager();
-					if(manager==NULL)
-						return ret;					
-					auto profile = manager->GetDeviceDefaultProfile(OVR::ProfileType::Profile_Unknown);					
-					if(profile==NULL)
-						profile = manager->GetDeviceDefaultProfile(OVR::ProfileType::Profile_RiftDKHD);
-					if(profile==NULL)
-						profile = manager->GetDeviceDefaultProfile(OVR::ProfileType::Profile_RiftDK1);
-					if(profile==NULL)
-						return ret;
-					return gcnew RiftDotNet::Platform::Profile(profile);
-				}
-			}
-
-
-			property RiftDotNet::IDeviceInfo^ Info
-			{
-				virtual RiftDotNet::IDeviceInfo^ get() override
-				{
-					if (IsDisposed)
-						throw gcnew ObjectDisposedException("IHMDDevice");
-
-					OVR::DeviceInfo info;
-					GetNative<OVR::DeviceManager>()->GetDeviceInfo(&info);
-					return gcnew RiftDotNet::Platform::DeviceInfo(info);
-				}
-			}
-
-			/// The enumeration of all sensor devices
-			property DisposableArray<IDeviceHandle<ISensorDevice^, ISensorInfo^>^>^ SensorDevices
-			{
-				virtual DisposableArray<IDeviceHandle<ISensorDevice^, ISensorInfo^>^>^ get()
+				virtual  DisposableArray<IHMDDevice^>^ get()
 				{
 					if (IsDisposed)
 						throw gcnew ObjectDisposedException("IDeviceHandle");
 
-					auto enumerator = GetNative<OVR::DeviceManager>()->EnumerateDevices<OVR::SensorDevice>(true);
-					auto ret = gcnew List<IDeviceHandle<ISensorDevice^, ISensorInfo^>^>();
+					int numDevices = ovrHmd_Detect();
+					auto ret = gcnew List<IHMDDevice^>(numDevices);
 
-					while(enumerator.GetType() != OVR::Device_None)
+					// get all devices
+					for (int i = 0; i < numDevices; i++)
 					{
-						auto wrapper = new EnumeratorWrapper<OVR::DeviceEnumerator<OVR::SensorDevice>>(enumerator);
-						ret->Add(gcnew TypedDeviceHandle<ISensorDevice^,ISensorInfo^>(wrapper));
-
-						if (!enumerator.Next())
-							break;
+						ovrHmd hmd = ovrHmd_Create(i);
+						ret->Add(gcnew HMDDevice(hmd));
 					}
 
-					return gcnew DisposableArray<IDeviceHandle<ISensorDevice^, ISensorInfo^>^>(ret->ToArray());
+					return gcnew DisposableArray<IHMDDevice^>(ret->ToArray());
 				}
 			}
 
-			/// The enumeration of all HMD devices.
-			property DisposableArray<IDeviceHandle<IHMDDevice^, IHMDInfo^>^>^ HMDDevices
+			property bool IsDisposed
 			{
-				virtual DisposableArray<IDeviceHandle<IHMDDevice^, IHMDInfo^>^>^ get()
+				virtual bool get()
+				{
+					return false;
+				}
+			}
+
+			virtual bool Equals(Object^ other) override sealed
+			{
+				if (other == nullptr)
+					return false;
+
+				auto tmp = dynamic_cast<DeviceManager^>(other);
+				if (tmp == nullptr)
+					return false;
+
+				// For now, I will assume that the ver same OVR::DeviceBase pointer
+				// is used for the same device. But maybe we need to compare the device
+				// id or something similar...
+				return _equalityHandle == tmp->_equalityHandle;
+			}
+
+			virtual int GetHashCode() override sealed
+			{
+				return _equalityHandle.GetHashCode();
+			}
+
+			virtual bool Equals(IDevice^ other) sealed
+			{
+				return Equals((Object^)other);
+			}
+
+			property DeviceType Type
+			{
+				virtual DeviceType get()
 				{
 					if (IsDisposed)
-						throw gcnew ObjectDisposedException("IDeviceHandle");
+						throw gcnew ObjectDisposedException("IDevice");
 
-					auto enumerator = GetNative<OVR::DeviceManager>()->EnumerateDevices<OVR::HMDDevice>(true);
-					auto ret = gcnew List<IDeviceHandle<IHMDDevice^,IHMDInfo^>^>();
-
-					while(enumerator.GetType() != OVR::Device_None)
-					{
-						auto wrapper = new EnumeratorWrapper<OVR::DeviceEnumerator<OVR::HMDDevice>>(enumerator);
-						ret->Add(gcnew TypedDeviceHandle<IHMDDevice^,IHMDInfo^>(wrapper));
-
-						if (!enumerator.Next())
-							break;
-					}
-
-					return gcnew DisposableArray<IDeviceHandle<IHMDDevice^, IHMDInfo^>^>(ret->ToArray());
+					return DeviceType::Manager;
 				}
 			}
 

@@ -61,21 +61,5 @@ namespace RiftDotNet
 		{
 			return _platformFactory.CreateDeviceManager();
 		}
-
-		/// <summary>
-		///     Creates a high-level object which accumulates information from the given
-		///     sensor and exposes it through various properties, such as orientation, acceleration
-		///     etc..
-		/// </summary>
-		/// <remarks>
-		///     The caller is responsible for disposing of the returned object.
-		/// </remarks>
-		/// <param name="sensorDevice">The sensor device who's input is to be processed</param>
-		/// <returns></returns>
-		/// <exception cref="ArgumentNullException">In case null is passed for the sensor device</exception>
-		public static ISensorFusion CreateSensorFusion(ISensorDevice sensorDevice = null)
-		{
-			return _platformFactory.CreateSensorFusion(sensorDevice);
-		}
 	}
 }

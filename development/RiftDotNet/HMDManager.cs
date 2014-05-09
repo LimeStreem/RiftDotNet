@@ -30,7 +30,6 @@ namespace RiftDotNet
 		private readonly ReaderWriterLockSlim _lock;
 		private readonly IDeviceManager _manager;
 		private readonly Dictionary<DeviceKey, DeviceResources> _nativeResources;
-        private readonly IProfile _defaultprofile;
 
 		/// <summary>
 		/// This event is fired when the given device is attached to the computer.
@@ -62,10 +61,8 @@ namespace RiftDotNet
 			_lock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
 			_manager = manager;
 			_handler = new InternalMessageHandler(this);
-			_manager.MessageHandler = _handler;
 			_nativeResources = new Dictionary<DeviceKey, DeviceResources>();
 			_devices = new Dictionary<DeviceKey, HMD>();
-            _defaultprofile = manager.DeviceDefaultProfile;
 
 			// Initially, we must to enumerate all devices, which are currently attached
 			// to the computer.
@@ -86,16 +83,6 @@ namespace RiftDotNet
 			: this(Factory.PlatformFactory)
 		{}
 
-        /// <summary>
-        ///     ..
-        /// </summary>
-        public IProfile DefaultProfile
-        {
-            get
-            {
-                return _defaultprofile;
-            }
-        }
 
 		/// <summary>
 		///     A reference to an HMD which is currently attached to this computer.
@@ -247,7 +234,7 @@ namespace RiftDotNet
 				{
 					if (handle.DeviceType == DeviceType.HMD)
 					{
-						AddDevice((IDeviceHandle<IHMDDevice, IHMDInfo>) handle);
+						AddDevice((IHMDDevice) handle);
 					}
 				}
 			}
@@ -255,15 +242,15 @@ namespace RiftDotNet
 			{
 				using (IDeviceHandle handle = message.DeviceHandle)
 				{
-					if (handle.DeviceType == DeviceType.Sensor)
-					{
-						RemoveDevice((IDeviceHandle<ISensorDevice, ISensorInfo>) handle);
-					}
+                    //if (handle.DeviceType == DeviceType.Sensor)
+                    //{
+                    //    RemoveDevice((IDeviceHandle<ISensorDevice, ISensorInfo>) handle);
+                    //}
 				}
 			}
 		}
 
-		private void AddDevice(IDeviceHandle<IHMDDevice, IHMDInfo> handle)
+        private void AddDevice(IHMDDevice handle)
 		{
 			_lock.EnterWriteLock();
 			try
@@ -276,7 +263,7 @@ namespace RiftDotNet
 				if (!_devices.TryGetValue(key, out hmd))
 				{
 					// There's no HMD for this device yet: We need to create one
-					hmd = new HMD(handle.DeviceInfo, _lock);
+					hmd = new HMD(handle.Info, _lock);
 					_devices.Add(key, hmd);
 				}
 
@@ -322,24 +309,5 @@ namespace RiftDotNet
 				_lock.ExitWriteLock();
 			}
 		}
-
-		private void RemoveDevice(IDeviceHandle<ISensorDevice, ISensorInfo> handle)
-		{
-			_lock.EnterWriteLock();
-			try
-			{
-				var key = new DeviceKey(handle.DeviceInfo);
-				DeviceResources resources;
-				if (!_nativeResources.TryGetValue(key, out resources))
-					return;
-
-				RemoveDevice(resources);
-			}
-			finally
-			{
-				_lock.ExitWriteLock();
-			}
-		}
-
 	}
 }

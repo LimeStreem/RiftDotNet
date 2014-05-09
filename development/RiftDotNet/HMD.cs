@@ -4,351 +4,204 @@ using SharpDX;
 
 namespace RiftDotNet
 {
-	internal sealed class HMD
-		: IHMD
-	{
-		private IHMDInfo _info;
-		private readonly ReaderWriterLockSlim _lock;
-		private DeviceResources _resources;
+    internal sealed class HMD
+        : IHMD
+    {
+        private IHMDInfo _info;
+        private readonly ReaderWriterLockSlim _lock;
+        private DeviceResources _resources;
 
-		private bool _resetOutstanding;
+        private bool _resetOutstanding;
 
-		#region Settings
+        public HMD(IHMDInfo info, ReaderWriterLockSlim @lock)
+        {
+            if (info == null)
+                throw new ArgumentNullException();
 
-		private bool _isPredictionEnabled;
-		private TimeSpan _predictionTime;
-        private bool _yawCorrection;
-		private float _accelGain;
+            if (@lock == null)
+                throw new ArgumentNullException();
 
-		#endregion
+            _info = info;
+            _lock = @lock;
+        }
 
-		#region Properties
+        internal DeviceResources Resources
+        {
+            set
+            {
+                _lock.EnterWriteLock();
+                try
+                {
+                    if (value == _resources)
+                        return;
 
-		private Vector3 _acceleration;
-		private Vector3 _angularVelocity;
-		private Quaternion _orientation;
-		private Quaternion _predictedOrientation;
+                    if (_resources != null)
+                    {
+                        Action<IHMD> fn = Detached;
+                        if (fn != null)
+                            fn(this);
+                    }
 
-		#endregion
+                    _resources = value;
 
-		public HMD(IHMDInfo info, ReaderWriterLockSlim @lock)
-		{
-			if (info == null)
-				throw new ArgumentNullException();
+                    if (_resources != null)
+                    {
+                        if (_resetOutstanding)
+                        {
+                            //_resources.Fusion.Reset();
+                            _resetOutstanding = false;
+                        }
 
-			if (@lock == null)
-				throw new ArgumentNullException();
+                        // It may be possible that a newly attached device gets
+                        // a different port, display position, whatever...
+                        _info = _resources.Info;
 
-			_info = info;
-			_lock = @lock;
-		}
+                        // This is even more interesting. The user may have changed
+                        // setting like yaw multiplier and whatnot: We want to apply
+                        // those settings again.
+                        //_resources.Fusion.YawCorrection = _yawCorrection;
+                        //_resources.Fusion.IsPredictionEnabled = _isPredictionEnabled;
+                        //_resources.Fusion.PredictionTime = _predictionTime;
+                        //_resources.Fusion.AccelGain = _accelGain;
 
-		internal DeviceResources Resources
-		{
-			set
-			{
-				_lock.EnterWriteLock();
-				try
-				{
-					if (value == _resources)
-						return;
+                        Action<IHMD> fn = Attached;
+                        if (fn != null)
+                            fn(this);
+                    }
+                }
+                finally
+                {
+                    _lock.ExitWriteLock();
+                }
+            }
+        }
 
-					if (_resources != null)
-					{
-						Action<IHMD> fn = Detached;
-						if (fn != null)
-							fn(this);
-					}
+        public IEyeRenderDesc GetEyeRenderSettings(IEyeDesc eye)
+        {
+            return _resources.Device.GetEyeRenderSettings(eye);
+        }
 
-					_resources = value;
+        #region IHMD Members
 
-					if (_resources != null)
-					{
-						if (_resetOutstanding)
-						{
-							_resources.Fusion.Reset();
-							_resetOutstanding = false;
-						}
+        public IHMDInfo Info
+        {
+            get { return _info; }
+        }
 
-						// It may be possible that a newly attached device gets
-						// a different port, display position, whatever...
-						_info = _resources.Info;
+        public event Action<IHMD> Attached;
+        public event Action<IHMD> Detached;
 
-						// This is even more interesting. The user may have changed
-						// setting like yaw multiplier and whatnot: We want to apply
-						// those settings again.
-                        _resources.Fusion.YawCorrection = _yawCorrection;
-						_resources.Fusion.IsPredictionEnabled = _isPredictionEnabled;
-						_resources.Fusion.PredictionTime = _predictionTime;
-						_resources.Fusion.AccelGain = _accelGain;
+        public bool IsAttached
+        {
+            get { return _resources != null; }
+        }
 
-						Action<IHMD> fn = Attached;
-						if (fn != null)
-							fn(this);
-					}
-				}
-				finally
-				{
-					_lock.ExitWriteLock();
-				}
-			}
-		}
+        public ISensorState GetSensorState(double absoluteTime)
+        {
+            return _resources.Device.GetSensorState(absoluteTime);
+        }
 
-		#region IHMD Members
+        public void Reset()
+        {
+            _lock.EnterWriteLock();
+            try
+            {
+                if (IsAttached)
+                {
+                    _resources.Device.ResetSensor();
+                }
+                else
+                {
+                    _resetOutstanding = true;
+                }
+            }
+            finally
+            {
+                _lock.EnterWriteLock();
+            }
+        }
 
-		public IHMDInfo Info
-		{
-			get { return _info; }
-		}
+        public ITextureSize GetFovTextureSize(EyeType eye, IFovPort fov, float pixelsPerDisplayPixel)
+        {
+            return _resources.Device.GetFovTextureSize(eye, fov, pixelsPerDisplayPixel);
+        }
 
-		public event Action<IHMD> Attached;
-		public event Action<IHMD> Detached;
+        public IFrameTiming BeginFrameTiming(uint frameIndex)
+        {
+            return _resources.Device.BeginFrameTiming(frameIndex);
+        }
 
-		public bool IsAttached
-		{
-			get { return _resources != null; }
-		}
+        public IPosef GetEyePose(EyeType eye)
+        {
+            return _resources.Device.GetEyePose(eye);
+        }
 
-		public Quaternion Orientation
-		{
-			get
-			{
-				_lock.EnterWriteLock();
-				try
-				{
-					if (IsAttached)
-						_orientation = _resources.Fusion.Orientation;
+        public bool CreateDistortionMesh(IEyeDesc eyeDesc, uint distortionCaps,
+           out Vector2[] uvScaleOffsetOut, out IDistortionMesh meshData)
+        {
+            return _resources.Device.CreateDistortionMesh(eyeDesc, distortionCaps,
+                out uvScaleOffsetOut, out meshData);
+        }
 
-					return _orientation;
-				}
-				finally
-				{
-					_lock.ExitWriteLock();
-				}
-			}
-		}
+        public Matrix[] GetEyeTimewarpMatrices(EyeType eye, IPosef renderPose)
+        {
+            return _resources.Device.GetEyeTimewarpMatrices(eye, renderPose);
+        }
 
-		public Quaternion PredictedOrientation
-		{
-			get
-			{
-				_lock.EnterWriteLock();
-				try
-				{
-					if (IsAttached)
-                        _predictedOrientation = _resources.Fusion.PredictedOrientation;
+        public Matrix CreateProjection(IFovPort fov, float znear, float zfar, bool rightHanded)
+        {
+            return _resources.Device.CreateProjection(fov, znear, zfar, rightHanded);
+        }
 
-					return _predictedOrientation;
-				}
-				finally
-				{
-					_lock.ExitWriteLock();
-				}
-			}
-		}
+        public void EndFrameTiming()
+        {
+            _resources.Device.EndFrameTiming();
+        }
 
-		public Vector3 Acceleration
-		{
-			get
-			{
-				_lock.EnterWriteLock();
-				try
-				{
-					if (IsAttached)
-						_acceleration = _resources.Fusion.Acceleration;
+        public double WaitTillTime(double absoluteTime)
+        {
+            return _resources.Device.WaitTillTime(absoluteTime);
+        }
 
-					return _acceleration;
-				}
-				finally
-				{
-					_lock.ExitWriteLock();
-				}
-			}
-		}
+        public bool ConfigureOpenGlRendering(
+            uint hmdCaps,
+            uint distortionCaps,
+            IntPtr window,
+            IEyeDesc[] eyeDescIn,
+            out IEyeRenderDesc[] eyeRenderDescOut)
+        {
+            return _resources.Device.ConfigureOpenGlRendering(hmdCaps, distortionCaps,
+                window, eyeDescIn, out eyeRenderDescOut);
+        }
 
-		public Vector3 AngularVelocity
-		{
-			get
-			{
-				_lock.EnterWriteLock();
-				try
-				{
-					if (IsAttached)
-						_angularVelocity = _resources.Fusion.AngularVelocity;
+        public IFrameTiming BeginFrame(uint frameIndex)
+        {
+            return _resources.Device.BeginFrame(frameIndex);
+        }
 
-					return _angularVelocity;
-				}
-				finally
-				{
-					_lock.ExitWriteLock();
-				}
-			}
-		}
+        public void EndFrame()
+        {
+            _resources.Device.EndFrame();
+        }
 
-		public float AccelGain
-		{
-			get
-			{
-				_lock.EnterWriteLock();
-				try
-				{
-					if (IsAttached)
-						_accelGain = _resources.Fusion.AccelGain;
+        public IPosef BeginEyeRender(EyeType eye)
+        {
+            return _resources.Device.BeginEyeRender(eye);
+        }
 
-					return _accelGain;
-				}
-				finally
-				{
-					_lock.ExitWriteLock();
-				}
-			}
-			set
-			{
-				_lock.EnterWriteLock();
-				try
-				{
-					if (IsAttached)
-						_resources.Fusion.AccelGain = value;
+        public void EndEyeRender(EyeType eye,
+            IPosef renderPose, ITextureSize textureSize, Viewport renderViewport,
+            uint textureId)
+        {
+            _resources.Device.EndEyeRender(eye, renderPose, textureSize,
+                renderViewport, textureId);
+        }
 
-					_accelGain = value;
-				}
-				finally
-				{
-					_lock.ExitWriteLock();
-				}
-			}
-		}
+        public void WaitUntilGpuIdleGL()
+        {
+            _resources.Device.WaitUntilGpuIdleGL();
+        }
 
-		public bool YawCorrection
-		{
-			get
-			{
-				_lock.EnterWriteLock();
-				try
-				{
-					if (IsAttached)
-                        _yawCorrection = _resources.Fusion.YawCorrection;
-
-                    return _yawCorrection;
-				}
-				finally
-				{
-					_lock.ExitWriteLock();
-				}
-			}
-			set
-			{
-				_lock.EnterWriteLock();
-				try
-				{
-					if (IsAttached)
-						_resources.Fusion.YawCorrection = value;
-
-                    _yawCorrection = value;
-				}
-				finally
-				{
-					_lock.ExitWriteLock();
-				}
-			}
-		}
-
-		public bool IsPredictionEnabled
-		{
-			get
-			{
-				_lock.EnterWriteLock();
-				try
-				{
-					if (IsAttached)
-						_isPredictionEnabled = _resources.Fusion.IsPredictionEnabled;
-
-					return _isPredictionEnabled;
-				}
-				finally
-				{
-					_lock.ExitWriteLock();
-				}
-			}
-			set
-			{
-				_lock.EnterWriteLock();
-				try
-				{
-					if (IsAttached)
-						_resources.Fusion.IsPredictionEnabled = value;
-
-					_isPredictionEnabled = value;
-				}
-				finally
-				{
-					_lock.ExitWriteLock();
-				}
-			}
-		}
-
-		public TimeSpan PredictionTime
-		{
-			get
-			{
-				_lock.EnterWriteLock();
-				try
-				{
-					if (IsAttached)
-						_predictionTime = _resources.Fusion.PredictionTime;
-
-					return _predictionTime;
-				}
-				finally
-				{
-					_lock.ExitWriteLock();
-				}
-			}
-			set
-			{
-				_lock.EnterWriteLock();
-				try
-				{
-					if (IsAttached)
-						_resources.Fusion.PredictionTime = value;
-
-					_predictionTime = value;
-				}
-				finally
-				{
-					_lock.ExitWriteLock();
-				}
-			}
-		}
-
-		public void Reset()
-		{
-			_lock.EnterWriteLock();
-			try
-			{
-				if (IsAttached)
-				{
-					_resources.Fusion.Reset();
-					_orientation = _resources.Fusion.Orientation;
-					_predictedOrientation = _resources.Fusion.PredictedOrientation;
-					_acceleration = _resources.Fusion.Acceleration;
-					_angularVelocity = _resources.Fusion.AngularVelocity;
-				}
-				else
-				{
-					_resetOutstanding = true;
-					_orientation = Quaternion.Identity;
-					_predictedOrientation = Quaternion.Identity;
-					_acceleration = new Vector3();
-					_angularVelocity = new Vector3();
-				}
-			}
-			finally
-			{
-				_lock.EnterWriteLock();
-			}
-		}
-
-		#endregion
-	}
+        #endregion
+    }
 }

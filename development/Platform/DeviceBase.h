@@ -14,8 +14,6 @@ namespace RiftDotNet
 {
 	namespace Platform
 	{
-		class MessageHandler;
-
 		public ref class DeviceBase abstract
 			: public IDevice
 		{
@@ -72,11 +70,6 @@ namespace RiftDotNet
 				}
 			}
 
-			property RiftDotNet::MessageHandler^ MessageHandler
-			{
-				virtual RiftDotNet::MessageHandler^ get();
-				virtual void set(RiftDotNet::MessageHandler^ handler);
-			}
 
 			property RiftDotNet::IDeviceInfo^ Info
 			{
@@ -144,7 +137,6 @@ namespace RiftDotNet
 
 			IntPtr _equalityHandle;
 			OVR::DeviceBase* _native;
-			RiftDotNet::Platform::MessageHandler* _handler;
 		};
 	}
 }

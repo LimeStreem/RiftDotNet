@@ -9,20 +9,10 @@
 		: IDevice
 	{
 		/// <summary>
-		/// The list of all sensor devices, one for each sensor, currently
-		/// attached to this system.
-		/// </summary>
-		DisposableArray<IDeviceHandle<ISensorDevice, ISensorInfo>> SensorDevices { get; }
-
-		/// <summary>
 		/// The list of all HMD devices, one for each HMD, currently
 		/// attached to this system.
 		/// </summary>
-		DisposableArray<IDeviceHandle<IHMDDevice, IHMDInfo>> HMDDevices { get; }
-
-        /// <summary>
-        /// Get Default User Profile
-        /// </summary>
-        IProfile DeviceDefaultProfile { get; }
+		//DisposableArray<IDeviceHandle<IHMDDevice, IHMDInfo>> HMDDevices { get; }
+        DisposableArray<IHMDDevice> HMDDevices { get; }
 	}
 }

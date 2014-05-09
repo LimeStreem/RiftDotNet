@@ -1,18 +1,11 @@
 #include "stdafx.h"
+#include <OVR_CAPI.h>
+#include <CAPI\CAPI_HMDState.h>
 
-#include "DeviceBase.h"
-#include "DeviceHandle.h"
 #include "DeviceInfo.h"
 #include "DeviceManager.h"
 #include "HMDDevice.h"
 #include "HMDInfo.h"
-#include "MessageHandler.h"
-#include "Message.h"
-#include "MessageBodyFrame.h"
-#include "MessageDeviceStatus.h"
-#include "SensorDevice.h"
-#include "SensorFusion.h"
-#include "SensorInfo.h"
 #include "Factory.h"
 #include "Log4Net.h"
 #include "UnitTestDetector.h"

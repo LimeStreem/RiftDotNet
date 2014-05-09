@@ -19,8 +19,7 @@ namespace RiftDotNet
 			{
 			case OVR::Device_HMD:
 				{
-					OVR::HMDInfo info;
-					GetDeviceInfo(info);
+					ovrHmd hmd;
 					return gcnew HMDInfo(info);
 				}
 				break;

@@ -9,7 +9,7 @@ namespace RiftDotNet
 		/// Creates an empty ISensorInfo instance.
 		/// </summary>
 		/// <returns></returns>
-		ISensorInfo CreateSensorInfo();
+        ISensorState CreateSensorState();
 
 		/// <summary>
 		/// Creates an empty IHMDInfo instance.

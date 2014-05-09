@@ -21,9 +21,6 @@ namespace RiftDotNet
 			case RiftDotNet::DeviceType::HMD:
 				return IHMDDevice::typeid;
 
-			case RiftDotNet::DeviceType::Sensor:
-				return ISensorDevice::typeid;
-
 			default:
 				throw gcnew ArgumentException();
 			}

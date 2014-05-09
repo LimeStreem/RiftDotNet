@@ -1,4 +1,5 @@
 ﻿using System;
+using RiftDotNet.Win32;
 
 namespace RiftDotNet
 {
@@ -6,20 +7,18 @@ namespace RiftDotNet
 		: IDisposable
 	{
 		public readonly IHMDDevice Device;
-		public readonly ISensorFusion Fusion;
 		public readonly IHMDInfo Info;
-		public readonly ISensorDevice Sensor;
+		public readonly ISensorState Sensor;
 		public readonly DeviceKey Key;
 
-		public DeviceResources(IFactory factory, IDeviceHandle<IHMDDevice, IHMDInfo> handle)
+        public DeviceResources(IFactory factory, IHMDDevice handle)
 		{
 			if (factory == null || handle == null)
 				throw new ArgumentNullException();
 
-			Info = handle.DeviceInfo;
-			Device = handle.CreateDevice();
-			Sensor = Device.Sensor;
-			Fusion = factory.CreateSensorFusion(Sensor);
+			Info = handle.Info;
+            Device = handle;
+			Sensor = Device.GetSensorState(0.0);
 
 			if (Info == null)
 				throw new ArgumentNullException();
@@ -29,16 +28,13 @@ namespace RiftDotNet
                 System.Diagnostics.Trace.TraceWarning("Unable to create Sensor");
 
             if (Sensor != null)
-                Key = new DeviceKey(Sensor.Info);
+                Key = new DeviceKey(Device.SensorInfo);
 		}
 
 		#region IDisposable Members
 
 		public void Dispose()
 		{
-			Fusion.Dispose();
-            if (Sensor != null)
-                Sensor.Dispose();
 			Device.Dispose();
 		}
 

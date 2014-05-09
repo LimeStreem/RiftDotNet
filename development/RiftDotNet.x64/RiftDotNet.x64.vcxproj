@@ -12,7 +12,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{5BBD8B72-83F5-4F33-A6E4-868C67D0C436}</ProjectGuid>
-    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <Keyword>ManagedCProj</Keyword>
     <RootNamespace>RiftDotNetx64</RootNamespace>
   </PropertyGroup>
@@ -55,13 +55,13 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(OculusSDK)\LibOVR\Src;$(OculusSDK)\LibOVR\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(OculusSDK)\LibOVR\Src;$(OculusSDK)\LibOVR\Include;%(AdditionalIncludeDirectories);$(OculusSDK)\3rdParty\glext</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>libovr64.lib;User32.lib;Winmm.lib;shfolder.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(OculusSDK)\LibOVR\Lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opengl32.lib;libovr64.lib;dxguid.lib;dxgi.lib;d3d10.lib;d3d11.lib;d3dcompiler.lib;winmm.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;Winmm.lib;shfolder.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OculusSDK)\LibOVR\Lib\x64\VS2013;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <RegisterOutput>false</RegisterOutput>
     </Link>
   </ItemDefinitionGroup>
@@ -69,57 +69,44 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>WIN32;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(OculusSDK)\LibOVR\Src;$(OculusSDK)\LibOVR\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(OculusSDK)\LibOVR\Src;$(OculusSDK)\LibOVR\Include;$(OculusSDK)\3rdParty\glext;%(AdditionalIncludeDirectories);$(OculusSDK)\3rdParty\glext</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <Optimization>Full</Optimization>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>libovr64.lib;User32.lib;Winmm.lib;shfolder.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(OculusSDK)\LibOVR\Lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opengl32.lib;libovr64.lib;dxguid.lib;dxgi.lib;d3d10.lib;d3d11.lib;d3dcompiler.lib;winmm.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;Winmm.lib;shfolder.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OculusSDK)\LibOVR\Lib\x64\VS2013;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\Platform\AssemblyInfo.cpp" />
-    <ClCompile Include="..\Platform\DeviceBase.cpp" />
-    <ClCompile Include="..\Platform\DeviceHandle.cpp" />
-    <ClCompile Include="..\Platform\MessageHandler.cpp" />
-    <ClCompile Include="..\Platform\MessageHandlerImpl.cpp" />
     <ClCompile Include="..\Platform\RitDotNet.cpp" />
     <ClCompile Include="..\Platform\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\Platform\TypedDeviceHandle.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\Platform\DeviceBase.h" />
-    <ClInclude Include="..\Platform\DeviceEnumerable.h" />
-    <ClInclude Include="..\Platform\DeviceHandle.h" />
     <ClInclude Include="..\Platform\DeviceInfo.h" />
     <ClInclude Include="..\Platform\DeviceManager.h" />
+    <ClInclude Include="..\Platform\DistortionMesh.h" />
+    <ClInclude Include="..\Platform\DistortionVertex.h" />
+    <ClInclude Include="..\Platform\EyeDesc.h" />
     <ClInclude Include="..\Platform\Factory.h" />
+    <ClInclude Include="..\Platform\FovPort.h" />
+    <ClInclude Include="..\Platform\FrameTiming.h" />
     <ClInclude Include="..\Platform\Helper.h" />
     <ClInclude Include="..\Platform\HMDDevice.h" />
     <ClInclude Include="..\Platform\HMDInfo.h" />
     <ClInclude Include="..\Platform\Log4Net.h" />
-    <ClInclude Include="..\Platform\Message.h" />
-    <ClInclude Include="..\Platform\MessageBodyFrame.h" />
-    <ClInclude Include="..\Platform\MessageDeviceStatus.h" />
-    <ClInclude Include="..\Platform\MessageHandler.h" />
-    <ClInclude Include="..\Platform\MessageHandlerImpl.h" />
-    <ClInclude Include="..\Platform\MessageLatencyTestButton.h" />
-    <ClInclude Include="..\Platform\MessageLatencyTestColorDetected.h" />
-    <ClInclude Include="..\Platform\MessageLatencyTestSamples.h" />
-    <ClInclude Include="..\Platform\MessageLatencyTestStarted.h" />
-    <ClInclude Include="..\Platform\Profile.h" />
-    <ClInclude Include="..\Platform\ProfileManager.h" />
+    <ClInclude Include="..\Platform\Pose.h" />
+    <ClInclude Include="..\Platform\PoseState.h" />
     <ClInclude Include="..\Platform\RiftDotNet.h" />
-    <ClInclude Include="..\Platform\SensorDevice.h" />
-    <ClInclude Include="..\Platform\SensorFusion.h" />
     <ClInclude Include="..\Platform\SensorInfo.h" />
+    <ClInclude Include="..\Platform\SensorState.h" />
     <ClInclude Include="..\Platform\stdafx.h" />
-    <ClInclude Include="..\Platform\TypedDeviceHandle.h" />
+    <ClInclude Include="..\Platform\TextureSize.h" />
     <ClInclude Include="..\Platform\UnitTestDetector.h" />
   </ItemGroup>
   <ItemGroup>
